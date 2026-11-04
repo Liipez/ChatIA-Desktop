@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatIA — Inicializando</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #101116;
+            color: #F5F5F7;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .splash {
+            position: relative;
+            display: flex;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .glow {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            background: rgba(131, 237, 128, 0.07);
+            border-radius: 50%;
+        }
+
+        .logo {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 90px;
+            border: 1px solid rgba(131, 237, 128, 0.45);
+            border-radius: 26px;
+            background: #191A22;
+            box-shadow: 0 0 45px rgba(131, 237, 128, 0.10);
+            opacity: 0;
+            transform: scale(0.6);
+        }
+
+        .logo svg {
+            width: 48px;
+            height: 48px;
+        }
+
+        .brand {
+            margin-top: 24px;
+            font-size: 38px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        .brand span {
+            color: #83ED80;
+        }
+
+        .subtitle {
+            margin-top: 12px;
+            color: #A4A6B3;
+            font-size: 13px;
+            letter-spacing: 2px;
+            opacity: 0;
+        }
+
+        .loader {
+            position: absolute;
+            bottom: 45px;
+            width: 150px;
+            height: 3px;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #292A33;
+            opacity: 0;
+        }
+
+        .loader-bar {
+            width: 40%;
+            height: 100%;
+            border-radius: 10px;
+            background: #83ED80;
+            transform: translateX(-100%);
+        }
+
+        .version {
+            position: absolute;
+            bottom: 18px;
+            color: #666875;
+            font-size: 10px;
+            letter-spacing: 1px;
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body>
+<main class="splash">
+    <div class="glow"></div>
+
+    <div class="logo">
+        <svg viewBox="0 0 48 48" fill="none"
+             xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 11.5C8 8.46 10.46 6 13.5 6H34.5C37.54 6 40 8.46 40 11.5V27.5C40 30.54 37.54 33 34.5 33H25L15 41V33H13.5C10.46 33 8 30.54 8 27.5V11.5Z"
+                  stroke="#83ED80" stroke-width="2.5"
+                  stroke-linejoin="round"/>
+            <circle cx="17" cy="19.5" r="2.2" fill="#83ED80"/>
+            <circle cx="24" cy="19.5" r="2.2" fill="#83ED80"/>
+            <circle cx="31" cy="19.5" r="2.2" fill="#83ED80"/>
+        </svg>
+    </div>
+
+    <h1 class="brand">Chat<span>IA</span></h1>
+
+    <p class="subtitle">SUA INTELIGÊNCIA, CONECTADA.</p>
+
+    <div class="loader">
+        <div class="loader-bar"></div>
+    </div>
+
+    <p class="version">CHATIA DESKTOP · V1.0</p>
+</main>
+
+<!-- GSAP -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+
+<script>
+    window.splashFinished = false;
+
+    const timeline = gsap.timeline({
+        onComplete: () => {
+            window.splashFinished = true;
+        }
+    });
+
+    timeline
+        .to(".logo", {
+            opacity: 1,
+            scale: 1,
+            duration: 0.7,
+            ease: "back.out(1.7)"
+        })
+        .to(".brand", {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            ease: "power3.out"
+        }, "-=0.25")
+        .to(".subtitle", {
+            opacity: 1,
+            duration: 0.45
+        }, "-=0.15")
+        .to(".loader", {
+            opacity: 1,
+            duration: 0.25
+        }, "-=0.1")
+        .to(".loader-bar", {
+            x: "150%",
+            duration: 0.8,
+            ease: "none"
+        })
+        .to(".version", {
+            opacity: 1,
+            duration: 0.25
+        }, "-=0.7")
+        .to(".splash", {
+            opacity: 0,
+            duration: 0.55,
+            ease: "power2.in"
+        }, "+=0.25");
+</script>
+</body>
+</html>

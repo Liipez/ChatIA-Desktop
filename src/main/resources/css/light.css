@@ -1,0 +1,31 @@
+.root {
+    -fx-background-color: #F5F6FA;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.label {
+    -fx-text-fill: #191A22;
+}
+
+.text-field,
+.password-field,
+.text-area {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #191A22;
+    -fx-prompt-text-fill: #858796;
+    -fx-border-color: #D8DAE3;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+}
+
+.button {
+    -fx-background-color: #83ED80;
+    -fx-text-fill: #101116;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #6DDA6A;
+}
