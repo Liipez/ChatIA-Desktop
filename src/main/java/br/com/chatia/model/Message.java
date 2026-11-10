@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 public class Message {
     private String id;
     private String conversationId;
+    private String userId;
     private String role;
     private String content;
     private LocalDateTime createdAt;
@@ -11,8 +12,9 @@ public class Message {
     public Message() {
     }
 
-    public Message(String conversationId, String role, String content) {
+    public Message(String conversationId, String userId, String role, String content) {
         this.conversationId = conversationId;
+        this.userId = userId;
         this.role = role;
         this.content = content;
         this.createdAt = LocalDateTime.now();
@@ -32,6 +34,14 @@ public class Message {
 
     public void setConversationId(String conversationId) {
         this.conversationId = conversationId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getRole() {

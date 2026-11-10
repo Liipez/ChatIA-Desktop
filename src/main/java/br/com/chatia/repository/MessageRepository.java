@@ -28,6 +28,7 @@ public class MessageRepository {
                 new Document("conversationId", 1)
                         .append("createdAt", 1)
         );
+        this.collection.createIndex(new Document("userId", 1));
     }
 
     public Message save(Message message) {
@@ -40,15 +41,19 @@ public class MessageRepository {
         return message;
     }
 
-    public List<Message> findByConversationId(String conversationId) {
+    /** Mensagens de uma conversa, filtrando também pelo dono (defesa em profundidade). */
+    public List<Message> findByConversationIdAndUserId(String conversationId, String userId) {
         List<Message> messages = new ArrayList<>();
 
-        if (!ObjectId.isValid(conversationId)) {
+        if (!ObjectId.isValid(conversationId) || userId == null) {
             return messages;
         }
 
         collection.find(
-                Filters.eq("conversationId", conversationId)
+                Filters.and(
+                        Filters.eq("conversationId", conversationId),
+                        Filters.eq("userId", userId)
+                )
         ).sort(
                 Sorts.ascending("createdAt")
         ).forEach(doc -> messages.add(fromDocument(doc)));
@@ -56,13 +61,17 @@ public class MessageRepository {
         return messages;
     }
 
-    public long countByConversationId(String conversationId) {
-        if (!ObjectId.isValid(conversationId)) {
-            return 0;
-        }
-
-        return collection.countDocuments(
-                Filters.eq("conversationId", conversationId)
+    /**
+     * Migração: mensagens antigas foram salvas sem "userId".
+     * Deve ser chamada SOMENTE depois de confirmar que a conversa pertence ao usuário.
+     */
+    public void assignOwnerToLegacyMessages(String conversationId, String userId) {
+        collection.updateMany(
+                Filters.and(
+                        Filters.eq("conversationId", conversationId),
+                        Filters.exists("userId", false)
+                ),
+                com.mongodb.client.model.Updates.set("userId", userId)
         );
     }
 
@@ -70,6 +79,7 @@ public class MessageRepository {
         ZoneId zone = ZoneId.systemDefault();
 
         return new Document("conversationId", message.getConversationId())
+                .append("userId", message.getUserId())
                 .append("role", message.getRole())
                 .append("content", message.getContent())
                 .append("createdAt", Date.from(
@@ -85,6 +95,7 @@ public class MessageRepository {
 
         message.setId(doc.getObjectId("_id").toHexString());
         message.setConversationId(doc.getString("conversationId"));
+        message.setUserId(doc.getString("userId"));
         message.setRole(doc.getString("role"));
         message.setContent(doc.getString("content"));
 
@@ -95,13 +106,16 @@ public class MessageRepository {
 
         return message;
     }
-    public long deleteByConversationId(String conversationId) {
-        if (conversationId == null || !ObjectId.isValid(conversationId)) {
+    public long deleteByConversationIdAndUserId(String conversationId, String userId) {
+        if (conversationId == null || !ObjectId.isValid(conversationId) || userId == null) {
             return 0;
         }
 
         return collection.deleteMany(
-                Filters.eq("conversationId", conversationId)
+                Filters.and(
+                        Filters.eq("conversationId", conversationId),
+                        Filters.eq("userId", userId)
+                )
         ).getDeletedCount();
     }
 }

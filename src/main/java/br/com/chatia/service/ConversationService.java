@@ -45,8 +45,11 @@ public class ConversationService {
                     "Conversa não encontrada para este usuário."
             );
         }
-        return messageRepository.findByConversationId(
-                conversation.getId()
+        messageRepository.assignOwnerToLegacyMessages(conversation.getId(), user.getId());
+
+        return messageRepository.findByConversationIdAndUserId(
+                conversation.getId(),
+                user.getId()
         );
     }
     public List<Conversation> getUserConversations() {
@@ -109,7 +112,8 @@ public class ConversationService {
         }
 
         // Primeiro, exclui as mensagens da conversa.
-        messageRepository.deleteByConversationId(conversation.getId());
+        messageRepository.assignOwnerToLegacyMessages(conversation.getId(), user.getId());
+        messageRepository.deleteByConversationIdAndUserId(conversation.getId(), user.getId());
 
         // Depois, exclui a conversa do usuário autenticado.
         return conversationRepository.deleteByIdAndUserId(
@@ -149,6 +153,7 @@ public class ConversationService {
         }
         Message message = new Message(
                 conversation.getId(),
+                user.getId(),
                 role,
                 content.trim()
         );
@@ -188,8 +193,9 @@ public class ConversationService {
                 continue;
             }
 
+            messageRepository.assignOwnerToLegacyMessages(conversation.getId(), user.getId());
             List<Message> messages =
-                    messageRepository.findByConversationId(conversation.getId());
+                    messageRepository.findByConversationIdAndUserId(conversation.getId(), user.getId());
 
             for (Message message : messages) {
                 if (!"user".equals(message.getRole())
