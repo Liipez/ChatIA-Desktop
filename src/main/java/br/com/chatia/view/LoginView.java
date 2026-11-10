@@ -84,8 +84,7 @@ public class LoginView {
         forgotPassword.setPadding(Insets.EMPTY);
 
         forgotPassword.setOnAction(event ->
-                showMessage(stage, "Recuperação de senha",
-                        "Essa funcionalidade será implementada depois.")
+                new ForgotPasswordView().show(stage)
         );
 
         Button loginButton =
