@@ -1,4 +1,4 @@
-package br.com.chatia;
+package br.com.chatia.config;
 
 public class GroqConfig {
 

@@ -44,7 +44,7 @@ public class ChatService {
         question = question.trim();
 
         // Valida a chave antes de salvar qualquer coisa.
-        if (!br.com.chatia.GroqConfig.isConfigured()) {
+        if (!br.com.chatia.config.GroqConfig.isConfigured()) {
             throw new IllegalStateException(
                     "A chave da IA não está configurada. Defina a variável GROQ_API_KEY.");
         }

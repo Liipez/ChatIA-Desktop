@@ -73,6 +73,13 @@ public class UserRepository {
         ).getModifiedCount() > 0;
     }
 
+    public boolean deleteById(String id) {
+        if (!ObjectId.isValid(id)) {
+            return false;
+        }
+        return collection.deleteOne(Filters.eq("_id", new ObjectId(id))).getDeletedCount() > 0;
+    }
+
     private Document toDocument(User user) {
         return new Document("name", user.getName())
                 .append("email", user.getEmail())

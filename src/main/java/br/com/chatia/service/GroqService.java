@@ -1,6 +1,6 @@
 package br.com.chatia.service;
 
-import br.com.chatia.GroqConfig;
+import br.com.chatia.config.GroqConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

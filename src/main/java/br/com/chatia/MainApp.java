@@ -1,4 +1,4 @@
-    package br.com.chatia;
+package br.com.chatia;
 
 import br.com.chatia.view.LoginView;
 import javafx.animation.PauseTransition;
