@@ -111,48 +111,6 @@ public class KnowledgeRepository {
         return documents;
     }
 
-    public List<KnowledgeDocument> searchByKeyword(String keyword) {
-
-        List<KnowledgeDocument> documents = new ArrayList<>();
-
-        if (keyword == null || keyword.isBlank()) {
-            return documents;
-        }
-
-        String normalizedKeyword = keyword.toLowerCase().trim();
-
-        for (Document document : collection.find()) {
-
-            KnowledgeDocument knowledge =
-                    toKnowledgeDocument(document);
-
-            boolean matchesTitle =
-                    knowledge.getTitle() != null
-                            && knowledge.getTitle()
-                            .toLowerCase()
-                            .contains(normalizedKeyword);
-
-            boolean matchesContent =
-                    knowledge.getContent() != null
-                            && knowledge.getContent()
-                            .toLowerCase()
-                            .contains(normalizedKeyword);
-
-            boolean matchesKeywords =
-                    knowledge.getKeywords() != null
-                            && knowledge.getKeywords().stream()
-                            .anyMatch(k -> k != null
-                                    && k.toLowerCase()
-                                    .contains(normalizedKeyword));
-
-            if (matchesTitle || matchesContent || matchesKeywords) {
-                documents.add(knowledge);
-            }
-        }
-
-        return documents;
-    }
-
     private KnowledgeDocument toKnowledgeDocument(Document document) {
 
         KnowledgeDocument knowledge = new KnowledgeDocument();

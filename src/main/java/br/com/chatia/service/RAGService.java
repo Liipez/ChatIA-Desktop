@@ -4,9 +4,11 @@ import br.com.chatia.model.KnowledgeDocument;
 import br.com.chatia.repository.KnowledgeRepository;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Recuperação de informações (RAG) baseada em palavras-chave.
@@ -32,31 +34,29 @@ public class RAGService {
     }
 
     public List<KnowledgeDocument> searchRelevantDocuments(String question) {
+        return rank(knowledgeRepository.findAll(), question);
+    }
+
+    /**
+     * Ordena os documentos pela relevância em relação à pergunta.
+     * Título e conteúdo passam pela MESMA normalização da pergunta
+     * (minúsculas, sem acentos, sem pontuação), e a comparação é feita
+     * palavra a palavra, não por trecho de texto.
+     */
+    public List<KnowledgeDocument> rank(List<KnowledgeDocument> documents, String question) {
         List<String> relevantWords = textProcessor.extractRelevantWords(question);
 
-        if (relevantWords.isEmpty()) {
+        if (relevantWords.isEmpty() || documents == null) {
             return new ArrayList<>();
         }
 
-        Map<String, KnowledgeDocument> foundDocuments = new LinkedHashMap<>();
-
-        for (String word : relevantWords) {
-            for (KnowledgeDocument document : knowledgeRepository.searchByKeyword(word)) {
-                String chave = textProcessor.normalize(
-                        document.getTitle() + " " + document.getContent());
-
-                boolean jaExiste = foundDocuments.values().stream()
-                        .anyMatch(existente -> textProcessor.normalize(
-                                existente.getTitle() + " " + existente.getContent()
-                        ).equals(chave));
-
-                if (!jaExiste) {
-                    foundDocuments.put(document.getId(), document);
-                }
-            }
+        Map<String, KnowledgeDocument> unicos = new LinkedHashMap<>();
+        for (KnowledgeDocument document : documents) {
+            String chave = textProcessor.normalize(document.getTitle() + " " + document.getContent());
+            unicos.putIfAbsent(chave, document);
         }
 
-        return foundDocuments.values().stream()
+        return unicos.values().stream()
                 .map(document -> Map.entry(document, calculateRelevance(document, relevantWords)))
                 .filter(entry -> entry.getValue() > 0)
                 .sorted(Map.Entry.<KnowledgeDocument, Integer>comparingByValue().reversed())
@@ -67,29 +67,27 @@ public class RAGService {
 
     /** Título vale 5 pontos, palavra-chave 3 e conteúdo 2. */
     private int calculateRelevance(KnowledgeDocument document, List<String> relevantWords) {
-        int score = 0;
-
-        String title = textProcessor.normalize(document.getTitle());
-        String content = textProcessor.normalize(document.getContent());
-        List<String> keywords = document.getKeywords() == null
-                ? List.of()
-                : document.getKeywords();
-
-        for (String word : relevantWords) {
-            if (title.contains(word)) {
-                score += 5;
-            }
-            if (content.contains(word)) {
-                score += 2;
-            }
-            for (String keyword : keywords) {
-                if (keyword != null && textProcessor.normalize(keyword).contains(word)) {
-                    score += 3;
-                    break;
-                }
+        Set<String> title = new HashSet<>(textProcessor.tokenize(document.getTitle()));
+        Set<String> content = new HashSet<>(textProcessor.tokenize(document.getContent()));
+        Set<String> keywords = new HashSet<>();
+        if (document.getKeywords() != null) {
+            for (String keyword : document.getKeywords()) {
+                keywords.addAll(textProcessor.tokenize(keyword));
             }
         }
 
+        int score = 0;
+        for (String word : relevantWords) {
+            if (textProcessor.matchesAny(word, title)) {
+                score += 5;
+            }
+            if (textProcessor.matchesAny(word, keywords)) {
+                score += 3;
+            }
+            if (textProcessor.matchesAny(word, content)) {
+                score += 2;
+            }
+        }
         return score;
     }
 

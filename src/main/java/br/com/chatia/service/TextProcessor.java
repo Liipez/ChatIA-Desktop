@@ -60,4 +60,25 @@ public class TextProcessor {
                 .distinct()
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Verifica se a palavra da pergunta corresponde a alguma palavra do documento.
+     * Igualdade exata, ou variação da mesma palavra quando ambas têm 5+ letras
+     * (ex.: "documento" e "documentos"). Assim "java" NÃO corresponde a "javascript".
+     */
+    public boolean matchesAny(String word, Set<String> tokens) {
+        if (tokens.contains(word)) {
+            return true;
+        }
+        if (word.length() < 5) {
+            return false;
+        }
+        for (String token : tokens) {
+            if (token.length() >= 5 && (token.startsWith(word) || word.startsWith(token))
+                    && Math.abs(token.length() - word.length()) <= 2) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
