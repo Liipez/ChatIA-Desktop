@@ -10,8 +10,7 @@ final class IntegrationTestSupport {
 
     /** Pula o teste quando a variável de ambiente não está configurada. */
     static void requireEnv(String name) {
-        String value = System.getenv(name);
-        Assumptions.assumeTrue(value != null && !value.isBlank(),
+        Assumptions.assumeTrue(br.com.chatia.config.AppConfig.isSet(name),
                 name + " não configurada: teste de integração ignorado.");
     }
 

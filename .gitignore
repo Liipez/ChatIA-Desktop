@@ -37,3 +37,20 @@ build/
 
 ### Mac OS ###
 .DS_Store
+### Segredos / configuração local ###
+.env
+*.env
+config.properties
+!config.example.properties
+
+### Saída do instalador ###
+*.exe
+*.msi
+
+### Logs ###
+*.log
+logs/
+
+### Windows ###
+Thumbs.db
+desktop.ini

@@ -1,13 +1,17 @@
 package br.com.chatia.config;
 
-public class GroqConfig {
+public final class GroqConfig {
+
+    private GroqConfig() {
+    }
 
     public static String getApiKey() {
-        String apiKey = System.getenv("GROQ_API_KEY");
+        String apiKey = AppConfig.get("GROQ_API_KEY");
 
-        if (apiKey == null || apiKey.isBlank()) {
+        if (apiKey == null) {
             throw new IllegalStateException(
-                    "A variável GROQ_API_KEY não está configurada."
+                    "A chave da IA não está configurada. Defina GROQ_API_KEY "
+                            + "(variável de ambiente ou " + AppConfig.configFile() + ")."
             );
         }
 
@@ -15,7 +19,6 @@ public class GroqConfig {
     }
 
     public static boolean isConfigured() {
-        String apiKey = System.getenv("GROQ_API_KEY");
-        return apiKey != null && !apiKey.isBlank();
+        return AppConfig.isSet("GROQ_API_KEY");
     }
 }

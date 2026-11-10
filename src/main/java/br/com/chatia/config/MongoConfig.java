@@ -20,11 +20,12 @@ public class MongoConfig {
 
     public static synchronized MongoDatabase getDatabase() {
         if (mongoClient == null) {
-            String uri = System.getenv("MONGODB_URI");
+            String uri = AppConfig.get("MONGODB_URI");
 
-            if (uri == null || uri.isBlank()) {
+            if (uri == null) {
                 throw new IllegalStateException(
-                        "A variável MONGODB_URI não foi configurada."
+                        "O banco de dados não está configurado. Defina MONGODB_URI "
+                                + "(variável de ambiente ou " + AppConfig.configFile() + ")."
                 );
             }
 
@@ -37,10 +38,7 @@ public class MongoConfig {
             mongoClient = MongoClients.create(settings);
         }
 
-        String nomeBanco = System.getenv("MONGODB_DATABASE");
-        if (nomeBanco == null || nomeBanco.isBlank()) {
-            nomeBanco = NOME_BANCO_PADRAO;
-        }
+        String nomeBanco = AppConfig.get("MONGODB_DATABASE", NOME_BANCO_PADRAO);
 
         return mongoClient.getDatabase(nomeBanco);
     }

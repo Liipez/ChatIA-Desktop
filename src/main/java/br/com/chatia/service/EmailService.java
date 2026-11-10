@@ -1,5 +1,6 @@
 package br.com.chatia.service;
 
+import br.com.chatia.config.AppConfig;
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
@@ -13,7 +14,7 @@ import java.util.Properties;
 
 /**
  * Envio de e-mails via SMTP.
- * Configuração por variáveis de ambiente (nunca no código):
+ * Configuração externa via AppConfig (variável de ambiente ou config.properties):
  *   SMTP_HOST      ex.: smtp.gmail.com
  *   SMTP_PORT      ex.: 587 (opcional, padrão 587)
  *   SMTP_USER      ex.: seuemail@gmail.com
@@ -22,9 +23,9 @@ import java.util.Properties;
 public class EmailService {
 
     public boolean isConfigured() {
-        return notBlank(System.getenv("SMTP_HOST"))
-                && notBlank(System.getenv("SMTP_USER"))
-                && notBlank(System.getenv("SMTP_PASSWORD"));
+        return notBlank(AppConfig.get("SMTP_HOST"))
+                && notBlank(AppConfig.get("SMTP_USER"))
+                && notBlank(AppConfig.get("SMTP_PASSWORD"));
     }
 
     public void send(String to, String subject, String body) throws MessagingException {
@@ -34,10 +35,10 @@ public class EmailService {
             );
         }
 
-        String host = System.getenv("SMTP_HOST");
-        String port = notBlank(System.getenv("SMTP_PORT")) ? System.getenv("SMTP_PORT") : "587";
-        String user = System.getenv("SMTP_USER");
-        String password = System.getenv("SMTP_PASSWORD");
+        String host = AppConfig.get("SMTP_HOST");
+        String port = AppConfig.get("SMTP_PORT", "587");
+        String user = AppConfig.get("SMTP_USER");
+        String password = AppConfig.get("SMTP_PASSWORD");
 
         Properties props = new Properties();
         props.put("mail.smtp.host", host);
