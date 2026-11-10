@@ -18,7 +18,7 @@ public class RagTest {
         System.out.println("=== PERGUNTA ===");
         System.out.println(pergunta);
 
-        String contexto = knowledgeService.buildContext(pergunta);
+        String contexto = new br.com.chatia.service.RAGService().buildContext(pergunta);
 
         System.out.println("\n=== CONTEXTO RECUPERADO ===");
 

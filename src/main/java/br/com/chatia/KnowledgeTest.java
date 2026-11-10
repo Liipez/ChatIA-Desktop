@@ -38,7 +38,7 @@ public class KnowledgeTest {
             System.out.println();
 
             List<KnowledgeDocument> resultados =
-                    knowledgeService.searchRelevantDocuments(
+                    new br.com.chatia.service.RAGService().searchRelevantDocuments(
                             "O que é Java e para que serve?"
                     );
 
@@ -51,7 +51,7 @@ public class KnowledgeTest {
             System.out.println();
             System.out.println("Contexto recuperado:");
             System.out.println(
-                    knowledgeService.buildContext(
+                    new br.com.chatia.service.RAGService().buildContext(
                             "O que é Java e para que serve?"
                     )
             );

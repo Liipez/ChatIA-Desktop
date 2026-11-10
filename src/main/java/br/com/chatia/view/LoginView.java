@@ -2,13 +2,9 @@
 package br.com.chatia.view;
 
 import javafx.geometry.Insets;
-import javafx.scene.control.Alert;
-import br.com.chatia.view.MainView;
 import javafx.geometry.Pos;
-import br.com.chatia.repository.UserRepository;
-import br.com.chatia.service.AuthenticationService;
+import br.com.chatia.controller.LoginController;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -30,6 +26,8 @@ public class LoginView {
     private static final String WHITE = "#F5F5F7";
     private static final String GRAY = "#A4A6B3";
     private static final String BORDER = "#363744";
+
+    private final LoginController loginController = new LoginController();
 
     public void show(Stage stage) {
 
@@ -123,45 +121,22 @@ public class LoginView {
                 return;
             }
 
-            if (password.length() < 8) {
-                ChatIADialog.show(
-                        stage,
-                        "Campos obrigatórios",
-                        "Preencha o e-mail e a senha para continuar.",
-                        ChatIADialog.Type.WARNING
-                );
-                return;
-            }
+            loginButton.setDisable(true);
+            loginButton.setText("Entrando...");
 
-            try {
-                UserRepository repository = new UserRepository();
-                AuthenticationService auth =
-                        new AuthenticationService(repository);
-
-                auth.login(email, password);
-
-                new MainView().show(stage)
-                ;
-
-                // Próxima etapa: abrir a tela principal do ChatIA.
-
-            } catch (IllegalArgumentException e) {
-                showMessage(
-                        stage,
-                        "Não foi possível entrar",
-                        e.getMessage()
-                );
-
-            } catch (Exception e) {
-                showMessage(
-                        stage,
-                        "Erro de conexão",
-                        "Não foi possível realizar o login. Verifique a conexão com o banco de dados."
-                );
-
-                e.printStackTrace();
-            }
+            loginController.login(
+                    email,
+                    password,
+                    user -> new MainView().show(stage),
+                    error -> {
+                        loginButton.setDisable(false);
+                        loginButton.setText("Entrar na minha conta  →");
+                        showMessage(stage, "Não foi possível entrar", error);
+                    }
+            );
         });
+
+        passwordField.setOnAction(event -> loginButton.fire());
 
 
         Label accountText = createLabel("Ainda não tem uma conta?");
@@ -251,11 +226,6 @@ public class LoginView {
     private void showMessage(
             Stage stage, String title, String message) {
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.initOwner(stage);
-        alert.showAndWait();
+        ChatIADialog.show(stage, title, message, ChatIADialog.Type.ERROR);
     }
 }

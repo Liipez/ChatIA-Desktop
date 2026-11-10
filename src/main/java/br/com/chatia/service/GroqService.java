@@ -140,10 +140,11 @@ public class GroqService {
 
         if (response.statusCode() < 200
                 || response.statusCode() >= 300) {
-            throw new IOException(
-                    "Erro na API Groq (HTTP "
-                            + response.statusCode()
-                            + "): " + response.body()
+            // O corpo da resposta vai só para o console (pode conter detalhes técnicos).
+            System.err.println("[Groq] HTTP " + response.statusCode() + ": " + response.body());
+            throw new GroqException(
+                    response.statusCode(),
+                    "Erro na API Groq (HTTP " + response.statusCode() + ")"
             );
         }
 

@@ -13,10 +13,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Label;
-import br.com.chatia.service.KnowledgeService;
 import br.com.chatia.model.Conversation;
 import br.com.chatia.model.Message;
-import br.com.chatia.service.ConversationService;
+import br.com.chatia.controller.ChatController;
+import br.com.chatia.controller.SidebarController;
+import br.com.chatia.controller.ThemeController;
 import java.util.List;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
@@ -45,14 +46,16 @@ public class MainView {
     private TextArea messageInput;
     private Stage stage;
     private Label welcomeLabel;
-    private ConversationService conversationService;
+    private final SidebarController sidebarController = new SidebarController();
+    private final ChatController chatController = new ChatController();
+    private Button sendButton;
+    private Button themeButton;
     private Conversation currentConversation;
     private VBox conversationList;
-    private boolean temaEscuro = true;
+    private boolean temaEscuro = ThemeController.isDark();
 
     public void show(Stage stage) {
         this.stage = stage;
-        conversationService = new ConversationService();
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: " + BACKGROUND + ";");
 
@@ -62,11 +65,13 @@ public class MainView {
 
         Scene scene = new Scene(root, 1100, 720);
 
-        scene.getStylesheets().add(
-                getClass().getResource("/css/dark.css").toExternalForm()
-        );
+        ThemeController.apply(scene);
+        if (!temaEscuro) {
+            // Reaproveita o tema claro escolhido antes do logout.
+            atualizarCores(root);
+            themeButton.setText("☾ Tema escuro");
+        }
 
-        stage.setTitle("ChatIA Desktop");
         stage.setTitle("ChatIA Desktop");
         stage.setMinWidth(800);
         stage.setMinHeight(550);
@@ -100,11 +105,6 @@ public class MainView {
                         "-fx-padding: 12;"
         );
 
-        newChatButton.setOnAction(event -> {
-            currentConversation = null;
-            clearChat();
-            messageInput.clear();
-        });
         newChatButton.setOnAction(event -> {
             currentConversation = null;
             clearChat();
@@ -165,7 +165,7 @@ public class MainView {
         );
 
         logoutButton.setOnAction(event -> {
-            SessionManager.logout();
+            sidebarController.logout();
             new LoginView().show(stage);
         });
 
@@ -209,7 +209,7 @@ public class MainView {
         status.setTextFill(Color.web(GREEN));
         status.setFont(Font.font("Segoe UI", 12));
 
-        Button themeButton = new Button("☀ Tema claro");
+        themeButton = new Button("☀ Tema claro");
         themeButton.setStyle(
                 "-fx-background-color: transparent;" +
                         "-fx-text-fill: " + WHITE + ";" +
@@ -284,7 +284,7 @@ public class MainView {
                         "-fx-font-size: 14px;"
         );
 
-        Button sendButton = new Button("Enviar  ➤");
+        sendButton = new Button("Enviar  ➤");
         sendButton.setStyle(
                 "-fx-background-color: " + GREEN + ";" +
                         "-fx-text-fill: " + BACKGROUND + ";" +
@@ -331,7 +331,7 @@ public class MainView {
     private void sendMessage() {
         String text = messageInput.getText().trim();
 
-        if (text.isEmpty()) {
+        if (text.isEmpty() || chatController.isSending()) {
             return;
         }
 
@@ -340,124 +340,57 @@ public class MainView {
             welcomeLabel.setManaged(false);
         }
 
-        if (currentConversation == null) {
-            currentConversation =
-                    conversationService.createConversation(
-                            text.length() > 35
-                                    ? text.substring(0, 35)
-                                    : text
-                    );
-
-            loadConversations();
-        }
-
-        // Recupera as mensagens anteriores antes de salvar a pergunta atual.
-        List<Message> historicoAnterior =
-                conversationService.getMessages(
-                        currentConversation.getId()
-                );
-
-        conversationService.saveMessage(
-                currentConversation.getId(),
-                "user",
-                text
-        );
-
         addMessage("Você", text, true);
-
         messageInput.clear();
+        addMessage("ChatIA", "Pensando... 🤖", false);
+        setSending(true);
 
-        String conversationId = currentConversation.getId();
+        // Guarda qual conversa estava aberta no momento do envio.
+        Conversation conversaDoEnvio = currentConversation;
 
-        addMessage(
-                "ChatIA",
-                "Pensando... 🤖",
-                false
-        );
+        chatController.send(
+                conversaDoEnvio,
+                text,
+                result -> {
+                    setSending(false);
 
-        javafx.concurrent.Task<String> task =
-                new javafx.concurrent.Task<>() {
+                    // Se o usuário trocou de conversa enquanto a IA respondia,
+                    // a resposta já está salva no banco, mas não é desenhada na tela errada.
+                    boolean aindaNaMesmaConversa = conversaDoEnvio == null
+                            ? currentConversation == null
+                            : currentConversation != null
+                              && currentConversation.getId().equals(conversaDoEnvio.getId());
 
-                    @Override
-                    protected String call() throws Exception {
-                        br.com.chatia.service.GroqService groqService =
-                                new br.com.chatia.service.GroqService();
-
-                        br.com.chatia.service.KnowledgeService knowledgeService =
-                                new br.com.chatia.service.KnowledgeService();
-
-                        String context = knowledgeService.buildContext(text);
-
-                        String memoriaAnterior =
-                                conversationService.getPreviousConversationMemory(conversationId);
-
-                        if (!memoriaAnterior.isBlank()) {
-                            context += "\n\nMEMÓRIA DE OUTRAS CONVERSAS DO USUÁRIO:\n"
-                                    + memoriaAnterior;
-                        }
-
-                        List<br.com.chatia.service.GroqService.MessageHistory> historico =
-                                historicoAnterior.stream()
-                                        .map(message -> new br.com.chatia.service.GroqService.MessageHistory(
-                                                message.getRole(), message.getContent()
-                                        ))
-                                        .toList();
-
-                        return groqService.chat(text, context, historico);
+                    if (aindaNaMesmaConversa) {
+                        currentConversation = result.conversation();
+                        removerIndicadorPensando();
+                        addMessage("ChatIA", result.answer().getContent(), false);
                     }
-                };
 
-        task.setOnSucceeded(event -> {
-            String resposta = task.getValue();
+                    loadConversations();
+                },
+                error -> {
+                    setSending(false);
+                    removerIndicadorPensando();
+                    addMessage("ChatIA", "⚠ " + error, false);
+                    loadConversations();
+                }
+        );
+    }
 
-            try {
-                conversationService.saveMessage(
-                        conversationId,
-                        "assistant",
-                        resposta
-                );
+    private void setSending(boolean sending) {
+        sendButton.setDisable(sending);
+        sendButton.setText(sending ? "Aguarde..." : "Enviar  ➤");
+    }
 
-                messagesBox.getChildren().remove(
-                        messagesBox.getChildren().size() - 1
-                );
+    private void removerIndicadorPensando() {
+        if (!messagesBox.getChildren().isEmpty()) {
+            messagesBox.getChildren().remove(messagesBox.getChildren().size() - 1);
+        }
+    }
 
-                addMessage("ChatIA", resposta, false);
-
-            } catch (Exception e) {
-                System.err.println(
-                        "Erro ao salvar a resposta: " + e.getMessage()
-                );
-
-                addMessage(
-                        "ChatIA",
-                        resposta + "\n\nNão foi possível salvar a resposta no histórico.",
-                        false
-                );
-            }
-        });
-
-        task.setOnFailed(event -> {
-            Throwable erro = task.getException();
-
-            System.err.println(
-                    "Erro ao consultar a Groq: "
-                            + (erro != null ? erro.getMessage() : "Erro desconhecido")
-            );
-
-            messagesBox.getChildren().remove(
-                    messagesBox.getChildren().size() - 1
-            );
-
-            addMessage(
-                    "ChatIA",
-                    "Desculpe, não consegui gerar uma resposta agora. Tente novamente.",
-                    false
-            );
-        });
-
-        Thread thread = new Thread(task, "groq-request");
-        thread.setDaemon(true);
-        thread.start();
+    private void showError(String title, String message) {
+        ChatIADialog.show(stage, title, message, ChatIADialog.Type.ERROR);
     }
 
     private void addMessage(String sender, String text, boolean fromUser) {
@@ -502,10 +435,14 @@ public class MainView {
         welcomeLabel.setManaged(true);
     }
     private void loadConversations() {
-        conversationList.getChildren().clear();
+        sidebarController.loadConversations(
+                this::renderConversations,
+                error -> showError("Não foi possível carregar as conversas", error)
+        );
+    }
 
-        List<Conversation> conversations =
-                conversationService.getUserConversations();
+    private void renderConversations(List<Conversation> conversations) {
+        conversationList.getChildren().clear();
 
         for (Conversation conversation : conversations) {
             Button conversationButton =
@@ -517,12 +454,12 @@ public class MainView {
 
             conversationButton.setFont(Font.font("Segoe UI", 12));
 
+            conversationButton.setUserData(conversation.getId());
             aplicarEstiloConversa(conversationButton);
 
             conversationButton.setOnMouseEntered(event -> {
                 boolean selecionada = currentConversation != null
-                        && currentConversation.getTitle() != null
-                        && currentConversation.getTitle().equals(conversation.getTitle());
+                        && currentConversation.getId().equals(conversation.getId());
 
                 if (!selecionada) {
                     conversationButton.setStyle(
@@ -547,20 +484,26 @@ public class MainView {
                 welcomeLabel.setVisible(false);
                 welcomeLabel.setManaged(false);
 
-                List<Message> messages =
-                        conversationService.getMessages(
-                                conversation.getId()
-                        );
-
-                for (Message message : messages) {
-                    boolean fromUser = "user".equals(message.getRole());
-
-                    addMessage(
-                            fromUser ? "Você" : "ChatIA",
-                            message.getContent(),
-                            fromUser
-                    );
-                }
+                sidebarController.loadMessages(
+                        conversation.getId(),
+                        messages -> {
+                            // Ignora se o usuário já clicou em outra conversa.
+                            if (currentConversation == null
+                                    || !currentConversation.getId().equals(conversation.getId())) {
+                                return;
+                            }
+                            messagesBox.getChildren().clear();
+                            for (Message message : messages) {
+                                boolean fromUser = "user".equals(message.getRole());
+                                addMessage(
+                                        fromUser ? "Você" : "ChatIA",
+                                        message.getContent(),
+                                        fromUser
+                                );
+                            }
+                        },
+                        error -> showError("Não foi possível abrir a conversa", error)
+                );
 
                 loadConversations();
             });
@@ -647,25 +590,21 @@ public class MainView {
                         "Renomear conversa",
                         "Digite o novo nome para esta conversa.",
                         conversation.getTitle()
-                ).ifPresent(newTitle -> {
-                    try {
-                        Conversation renamed = conversationService.renameConversation(
+                ).ifPresent(newTitle ->
+                        sidebarController.rename(
                                 conversation.getId(),
-                                newTitle
-                        );
-
-                        conversation.setTitle(renamed.getTitle());
-                        loadConversations();
-
-                    } catch (IllegalArgumentException ex) {
-                        ChatIADialog.show(
-                                stage,
-                                "Não foi possível renomear",
-                                ex.getMessage(),
-                                ChatIADialog.Type.ERROR
-                        );
-                    }
-                });
+                                newTitle,
+                                renamed -> {
+                                    conversation.setTitle(renamed.getTitle());
+                                    if (currentConversation != null
+                                            && currentConversation.getId().equals(renamed.getId())) {
+                                        currentConversation.setTitle(renamed.getTitle());
+                                    }
+                                    loadConversations();
+                                },
+                                error -> showError("Não foi possível renomear", error)
+                        )
+                );
             });
 
             deleteItem.setOnAction(event -> {
@@ -676,35 +615,26 @@ public class MainView {
                 );
 
                 if (confirmed) {
-                    try {
-                        conversationService.deleteConversation(conversation.getId());
+                    sidebarController.delete(
+                            conversation.getId(),
+                            deleted -> {
+                                if (currentConversation != null
+                                        && currentConversation.getId().equals(conversation.getId())) {
+                                    currentConversation = null;
+                                    clearChat();
+                                }
 
-                        if (currentConversation != null
-                                && currentConversation.getId().equals(conversation.getId())) {
+                                loadConversations();
 
-                            currentConversation = null;
-                            messagesBox.getChildren().clear();
-                            welcomeLabel.setVisible(true);
-                            welcomeLabel.setManaged(true);
-                        }
-
-                        loadConversations();
-
-                        ChatIADialog.show(
-                                stage,
-                                "Conversa excluída",
-                                "A conversa foi excluída com sucesso.",
-                                ChatIADialog.Type.SUCCESS
-                        );
-
-                    } catch (IllegalArgumentException ex) {
-                        ChatIADialog.show(
-                                stage,
-                                "Não foi possível excluir",
-                                ex.getMessage(),
-                                ChatIADialog.Type.ERROR
-                        );
-                    }
+                                ChatIADialog.show(
+                                        stage,
+                                        "Conversa excluída",
+                                        "A conversa foi excluída com sucesso.",
+                                        ChatIADialog.Type.SUCCESS
+                                );
+                            },
+                            error -> showError("Não foi possível excluir", error)
+                    );
                 }
             });
 
@@ -745,9 +675,7 @@ public class MainView {
 
     private void aplicarEstiloConversa(Button button) {
         boolean selecionada = currentConversation != null
-                && currentConversation.getTitle() != null
-                && button.getText() != null
-                && button.getText().equals(currentConversation.getTitle());
+                && currentConversation.getId().equals(button.getUserData());
 
         String background;
 
@@ -771,47 +699,10 @@ public class MainView {
 
 
     private void alternarTema(Scene scene, Button themeButton) {
-        String caminhoTema;
-
-        if (temaEscuro) {
-            caminhoTema = "/css/light.css";
-            temaEscuro = false;
-            themeButton.setText("☾ Tema escuro");
-        } else {
-            caminhoTema = "/css/dark.css";
-            temaEscuro = true;
-            themeButton.setText("☀ Tema claro");
-        }
-        themeButton.setStyle(
-                "-fx-background-color: "
-                        + (temaEscuro ? "#191A22" : "#FFFFFF") + ";" +
-                        "-fx-text-fill: "
-                        + (temaEscuro ? "#F5F5F7" : "#191A22") + ";" +
-                        "-fx-border-color: "
-                        + (temaEscuro ? "#30313B" : "#D8DAE3") + ";" +
-                        "-fx-border-radius: 8;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 8 12;" +
-                        "-fx-cursor: hand;"
-        );
-
-        scene.getStylesheets().clear();
-
-        var arquivoTema = getClass().getResource(caminhoTema);
-
-        if (arquivoTema == null) {
-            System.err.println("Não foi possível encontrar: " + caminhoTema);
-            return;
-        }
-
-        scene.getStylesheets().add(arquivoTema.toExternalForm());
+        temaEscuro = ThemeController.toggle(scene);
+        themeButton.setText(temaEscuro ? "☀ Tema claro" : "☾ Tema escuro");
 
         atualizarCores(scene.getRoot());
-
-        scene.getStylesheets().add(arquivoTema.toExternalForm());
-
-        atualizarCores(scene.getRoot());
-
         loadConversations();
     }
 

@@ -1,7 +1,7 @@
 package br.com.chatia.view;
 
 import br.com.chatia.model.KnowledgeDocument;
-import br.com.chatia.service.KnowledgeService;
+import br.com.chatia.controller.KnowledgeController;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -25,7 +25,7 @@ import java.util.List;
 
 public class KnowledgeView {
 
-    private final KnowledgeService knowledgeService;
+    private final KnowledgeController knowledgeController;
 
     private final ListView<KnowledgeDocument> documentList;
     private final TextField titleField;
@@ -36,7 +36,7 @@ public class KnowledgeView {
 
     public KnowledgeView() {
 
-        knowledgeService = new KnowledgeService();
+        knowledgeController = new KnowledgeController();
 
         documentList = new ListView<>();
         titleField = new TextField();
@@ -291,7 +291,7 @@ public class KnowledgeView {
 
         try {
 
-            knowledgeService.saveDocument(title, content, keywords);
+            knowledgeController.save(title, content, keywords);
 
             loadDocuments();
 
@@ -306,8 +306,7 @@ public class KnowledgeView {
             showAlert(
                     Alert.AlertType.ERROR,
                     "Erro ao salvar",
-                    "Não foi possível salvar o documento: "
-                            + exception.getMessage()
+                    br.com.chatia.util.ErrorMessages.friendly(exception)
             );
         }
     }
@@ -318,7 +317,7 @@ public class KnowledgeView {
 
             documentList.setItems(
                     FXCollections.observableArrayList(
-                            knowledgeService.getAllDocuments()
+                            knowledgeController.findAll()
                     )
             );
 
@@ -327,8 +326,7 @@ public class KnowledgeView {
             showAlert(
                     Alert.AlertType.ERROR,
                     "Erro ao carregar",
-                    "Não foi possível carregar os documentos: "
-                            + exception.getMessage()
+                    br.com.chatia.util.ErrorMessages.friendly(exception)
             );
         }
     }
@@ -364,7 +362,7 @@ public class KnowledgeView {
 
                 try {
 
-                    boolean deleted = knowledgeService.deleteDocument(
+                    boolean deleted = knowledgeController.delete(
                             selected.getId()
                     );
 
@@ -388,8 +386,7 @@ public class KnowledgeView {
                     showAlert(
                             Alert.AlertType.ERROR,
                             "Erro ao excluir",
-                            "Não foi possível excluir o documento: "
-                                    + exception.getMessage()
+                            br.com.chatia.util.ErrorMessages.friendly(exception)
                     );
                 }
             }

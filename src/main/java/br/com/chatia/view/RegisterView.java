@@ -1,8 +1,7 @@
 package br.com.chatia.view;
 
 import javafx.geometry.Insets;
-import br.com.chatia.repository.UserRepository;
-import br.com.chatia.service.UserService;
+import br.com.chatia.controller.RegisterController;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -25,6 +24,8 @@ public class RegisterView {
     private static final String WHITE = "#F5F5F7";
     private static final String GRAY = "#A4A6B3";
     private static final String BORDER = "#363744";
+
+    private final RegisterController registerController = new RegisterController();
 
     public void show(Stage stage){
         // LOGO
@@ -124,41 +125,28 @@ public class RegisterView {
             String password = passwordField.getText();
             String confirmPassword = confirmField.getText();
 
-            try {
-                UserRepository repository = new UserRepository();
-                UserService userService = new UserService(repository);
+            registerButton.setDisable(true);
+            registerButton.setText("Criando conta...");
 
-                userService.register(
-                        name,
-                        email,
-                        password,
-                        confirmPassword
-                );
-
-                showMessage(
-                        stage,
-                        "Cadastro realizado!",
-                        "Sua conta foi criada com sucesso. Agora você já pode fazer login."
-                );
-
-                new LoginView().show(stage);
-
-            } catch (IllegalArgumentException e) {
-                showMessage(
-                        stage,
-                        "Não foi possível cadastrar",
-                        e.getMessage()
-                );
-
-            } catch (Exception e) {
-                showMessage(
-                        stage,
-                        "Erro no cadastro",
-                        "Não foi possível concluir o cadastro. Verifique a conexão com o banco de dados."
-                );
-
-                e.printStackTrace();
-            }
+            registerController.register(
+                    name,
+                    email,
+                    password,
+                    confirmPassword,
+                    user -> {
+                        showMessage(
+                                stage,
+                                "Cadastro realizado com sucesso!",
+                                "Sua conta foi criada. Agora você já pode fazer login."
+                        );
+                        new LoginView().show(stage);
+                    },
+                    error -> {
+                        registerButton.setDisable(false);
+                        registerButton.setText("Criar minha conta →");
+                        showMessage(stage, "Não foi possível cadastrar", error);
+                    }
+            );
         });
 
 
