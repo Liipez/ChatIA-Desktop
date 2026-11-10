@@ -194,7 +194,7 @@ public class LoginView {
 
         Scene scene = new Scene(root, 900, 650);
 
-        stage.setTitle("Hyvex IA - Login");
+        stage.setTitle("HyvexIA - Login");
         stage.setMinWidth(500);
         stage.setMinHeight(600);
         stage.setScene(scene);

@@ -27,7 +27,7 @@ public final class AsyncRunner {
         task.setOnSucceeded(e -> onSuccess.accept(task.getValue()));
         task.setOnFailed(e -> {
             Throwable error = task.getException();
-            System.err.println("[ChatIA] Erro: " + error);
+            System.err.println("[HyvexIA] Erro: " + error);
             onError.accept(ErrorMessages.friendly(error));
         });
 

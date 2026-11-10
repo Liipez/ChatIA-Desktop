@@ -87,7 +87,7 @@ public class PasswordRecoveryService {
 
         emailService.send(
                 user.getEmail(),
-                "ChatIA - Código de recuperação de senha",
+                "HyvexIA - Código de recuperação de senha",
                 "Olá, " + user.getName() + "!\n\n"
                         + "Seu código para redefinir a senha é: " + codigo + "\n\n"
                         + "Ele é válido por " + VALIDADE.toMinutes() + " minutos.\n"

@@ -29,7 +29,7 @@ public class RegisterView {
 
     public void show(Stage stage){
         // LOGO
-        Label logo = new Label("777");
+        Label logo = new Label("✦");
         logo.setFont(Font.font("System",FontWeight.BOLD, 30));
         logo.setTextFill(Color.web(BACKGROUND));
         logo.setAlignment(Pos.CENTER);
@@ -39,13 +39,13 @@ public class RegisterView {
                         "-fx-background-radius: 14; "
         );
 
-        Label appName = new Label("ChatIA");
+        Label appName = new Label("HyvexIA");
         appName.setFont(Font.font("System", FontWeight.BOLD, 23));
         appName.setTextFill(Color.web(WHITE));
 
         Label subtitle = new Label("DESKTOP ASSISTANT");
         subtitle.setFont(Font.font("System", 10));
-        subtitle.setTextFill(Color.web(GREEN));
+        subtitle.setTextFill(Color.web(GRAY));
 
         VBox brandText = new VBox(3,appName, subtitle );
         HBox brand = new HBox(12, logo, brandText);
@@ -216,7 +216,7 @@ public class RegisterView {
 
         Scene scene = new Scene(root, 900, 760);
 
-        stage.setTitle("ChatIA - Criar conta");
+        stage.setTitle("HyvexIA - Criar conta");
         stage.setMinWidth(600);
         stage.setMinHeight(700);
         stage.setScene(scene);

@@ -26,7 +26,12 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) {
-        System.out.println(">>> Iniciando ChatIA...");
+        System.out.println(">>> Iniciando HyvexIA...");
+
+        var icon = getClass().getResourceAsStream("/images/icon.png");
+        if (icon != null) {
+            stage.getIcons().add(new javafx.scene.image.Image(icon));
+        }
 
         try {
             URL splashUrl = getClass().getResource("/splash/splash.html");
@@ -51,7 +56,7 @@ public class MainApp extends Application {
 
                             System.out.println(">>> Splash carregada!");
 
-                            stage.setTitle("ChatIA");
+                            stage.setTitle("HyvexIA");
                             stage.setScene(new Scene(webView, 900, 600));
                             stage.setResizable(false);
                             stage.centerOnScreen();

@@ -52,7 +52,7 @@ public class KnowledgeView {
 
         Stage stage = new Stage();
 
-        stage.setTitle("ChatIA - Base de conhecimento");
+        stage.setTitle("HyvexIA - Base de conhecimento");
         stage.initOwner(owner);
         stage.initModality(Modality.NONE);
 

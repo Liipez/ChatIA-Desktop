@@ -72,7 +72,7 @@ public class MainView {
             themeButton.setText("☾ Tema escuro");
         }
 
-        stage.setTitle("ChatIA Desktop");
+        stage.setTitle("HyvexIA");
         stage.setMinWidth(800);
         stage.setMinHeight(550);
         stage.setScene(scene);
@@ -90,7 +90,7 @@ public class MainView {
                         " transparent transparent;"
         );
 
-        Label logo = new Label("✳  ChatIA");
+        Label logo = new Label("✦  HyvexIA");
         logo.setFont(Font.font("Segoe UI", 25));
         logo.setTextFill(Color.web(GREEN));
 
@@ -151,7 +151,7 @@ public class MainView {
         nameLabel.setTextFill(Color.web(WHITE));
         nameLabel.setFont(Font.font("Segoe UI", 13));
 
-        Label accountLabel = new Label("Conta ChatIA");
+        Label accountLabel = new Label("Conta HyvexIA");
         accountLabel.setTextFill(Color.web(GRAY));
         accountLabel.setFont(Font.font("Segoe UI", 11));
 
@@ -198,7 +198,7 @@ public class MainView {
                         BORDER + " transparent;"
         );
 
-        Label headerTitle = new Label("ChatIA");
+        Label headerTitle = new Label("HyvexIA");
         headerTitle.setTextFill(Color.web(WHITE));
         headerTitle.setFont(Font.font("Segoe UI", 18));
 
@@ -342,7 +342,7 @@ public class MainView {
 
         addMessage("Você", text, true);
         messageInput.clear();
-        addMessage("ChatIA", "Pensando... 🤖", false);
+        addMessage("HyvexIA", "Pensando... 🤖", false);
         setSending(true);
 
         // Guarda qual conversa estava aberta no momento do envio.
@@ -364,7 +364,7 @@ public class MainView {
                     if (aindaNaMesmaConversa) {
                         currentConversation = result.conversation();
                         removerIndicadorPensando();
-                        addMessage("ChatIA", result.answer().getContent(), false);
+                        addMessage("HyvexIA", result.answer().getContent(), false);
                     }
 
                     loadConversations();
@@ -372,7 +372,7 @@ public class MainView {
                 error -> {
                     setSending(false);
                     removerIndicadorPensando();
-                    addMessage("ChatIA", "⚠ " + error, false);
+                    addMessage("HyvexIA", "⚠ " + error, false);
                     loadConversations();
                 }
         );
@@ -496,7 +496,7 @@ public class MainView {
                             for (Message message : messages) {
                                 boolean fromUser = "user".equals(message.getRole());
                                 addMessage(
-                                        fromUser ? "Você" : "ChatIA",
+                                        fromUser ? "Você" : "HyvexIA",
                                         message.getContent(),
                                         fromUser
                                 );

@@ -73,7 +73,7 @@ public class GroqService {
         ObjectNode systemMessage = messages.addObject();
         systemMessage.put("role", "system");
         systemMessage.put("content", """
-                Você é o assistente virtual ChatIA.
+                Você é o assistente virtual HyvexIA.
 
                 Responda de forma clara, útil e organizada.
                 Responda no idioma utilizado pelo usuário.
